@@ -1,18 +1,19 @@
 const express = require("express");
-const app = express();
 const { Pool } = require('pg');
 const secrets = require('./secrets');
 const bodyParser = require('body-parser');
-app.use(bodyParser.json());
 
 const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
     database: 'cyf_hotels',
-    password: 'secrets.dbPassword',
+    password: secrets.dbPassword,
     port: 5432
 });
 
+const app = express();
+
+app.use(bodyParser.json());
 
 app.get("/hotels", function(req, res) {
     pool.query('SELECT * FROM hotels')
@@ -42,6 +43,16 @@ app.get("/hotels", function(req, res) {
             });
     });
             
+    app.post("/customers", function(req, res) {
+        pool.query('SELECT * FROM customers')
+            .then(result => res.json(result.rows))
+            .catch(e => console.error(e));
+        
+            pool.query(`INSERT INTO hotels(name, rooms, postcode) VALUES ($1, $2, $3)`,[name, rooms, postcode])
+            .then(result => res.send("Hotel created!"))
+            .catch(e => res.status(500).send(e))
+        
+        });
 
 
 app.listen(3000, function() {
