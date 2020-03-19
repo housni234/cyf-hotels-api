@@ -51,21 +51,39 @@ app.get("/customers", function(req, res) {
             
 app.post("/customers", function(req, res) {
     const newName = req.body.name; 
+    const newEmail = req.body.email
     const newAddress =req.body.address;
     const newCity = req.body.city;
     const newPostcode = req.body.postcode;
     const newCountry = req.body.country;
 
-  pool.query("SELECT * FROM customers WHERE name=$1", [newName])
-    .then(result => res.json(result.rows))
-    .catch(e => console.error(e));
-    
-  pool.query(`INSERT INTO customers (name, email, address, city, postcode, country) VALUES ($1, $2, $3, $4, $5, $6)`,
-   [newName, newAddress, newCity, newPostcode, newCountry])
-    .then(result => res.send("customer created!"))
-    .catch(e => res.status(500).send(e))
-    
+
+    pool
+    .query("SELECT * FROM customers WHERE name = $1", [newName])
+    .then(result => {
+      if (result.rows.length > 0) {
+        return res
+          .status(400)
+          .send("A customer with the same name already exists!");
+      } else {
+        const query =
+          "INSERT INTO customers (name, email, address, city, postcode, country) VALUES ($1, $2, $3, $4, $5, $6)";
+        const params = [
+          newName,
+          newEmail,
+          newAddress,
+          newCity,
+          newPostcode,
+          newCountry
+        ];
+
+        pool
+          .query(query, params)
+          .then(() => res.send("Customer created"))
+          .catch(e => res.status(500).send(e));
+      }
     });
+});
 
 
 app.listen(3000, function() {
