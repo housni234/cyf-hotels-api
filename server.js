@@ -20,6 +20,15 @@ app.get("/hotels", function(req, res) {
         .then(result => res.json(result.rows))
         .catch(e => console.error(e));
     });
+
+app.get("/hotels/:hotelId", (req, res) => {
+    const hotelId = req.params.hotelId;
+      
+    pool
+      .query("SELECT * FROM hotels WHERE id=$1", [hotelId])
+      .then(result => res.json(result.rows))
+      .catch(e => console.error(e));
+    });
     
 app.post("/hotels", function(req, res) {
     const newHotelName = req.body.name;
@@ -48,8 +57,36 @@ app.get("/customers", function(req, res) {
         .then(result => res.json(result.rows))
         .catch(e => console.error(e));
     });
-            
-app.post("/customers", function(req, res) {
+
+ app.get("/customers", (req, res) => {
+    pool.query('SELECT * FROM customers ORDER BY name')
+    .then(result => res.json(result.rows))
+    .catch(e => console.error(e));
+ }); 
+
+ app.get("customers/:customerId", (req, res) =>{
+     const customerId = req.params.customerId
+
+     pool
+        .query("SELECT * FROM  customers WHERE id=$1", [customerId])
+        .then(result => res.json(result.row))
+        .catch(e => console.log(e));
+ });
+
+ app.get("customers/:customerId/:bookings", (req, res) =>{
+     const customerId = req.params.customerId
+ 
+     const query = "select checkin_date ,nights, name, postcode" + 
+     "from bookings join hotels on bookings.hotel_id = hotels.id" + 
+     "where customer_id = $1";
+     
+     pool
+        .query(query, [customerId])
+        .then(result => res.json(result, row))
+        .catch(err => res.status(500).send(error));
+ });
+
+ app.post("/customers", function(req, res) {
     const newName = req.body.name; 
     const newEmail = req.body.email
     const newAddress =req.body.address;
@@ -58,7 +95,7 @@ app.post("/customers", function(req, res) {
     const newCountry = req.body.country;
 
 
-    pool
+  pool
     .query("SELECT * FROM customers WHERE name = $1", [newName])
     .then(result => {
       if (result.rows.length > 0) {
