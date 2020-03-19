@@ -64,16 +64,37 @@ app.get("/customers", function(req, res) {
     .catch(e => console.error(e));
  }); 
 
- app.get("customers/:customerId", (req, res) =>{
+ app.get("/customers/:customerId", (req, res) =>{
      const customerId = req.params.customerId
 
      pool
         .query("SELECT * FROM  customers WHERE id=$1", [customerId])
         .then(result => res.json(result.row))
-        .catch(e => console.log(e));
+        .catch(err => res.status(500).send(error));
  });
 
- app.get("customers/:customerId/:bookings", (req, res) =>{
+ app.put("/customers/:customerId", (req, res) =>{
+     const customerId = req.params.customerId;
+     const newEmail = req.params.email;
+     const newAddress = req.params.address;
+     const newCity = req.params.city;
+     const newPostcode = req.params.postcode;
+     const newCountry = req.params.country;
+     const newName = req.params.name;
+
+     if(!newEmail || newEmail === "") {
+         return res.status(400).send("email not valid");
+     } else {
+          pool
+     .query("UPDATE customers SET email=$1, address=$2, city=$3, country=$4, postcode=$5, name=$6 WHERE id=$7", 
+     [newEmail, newAddress, newCity, newCountry, newPostcode, newName, customerId])
+     
+     .then(() => res.send(`customer ${customerId} updated!`))
+     .catch(e => console.error(e));
+     }
+ });
+
+ app.get("/customers/:customerId/:bookings", (req, res) =>{
      const customerId = req.params.customerId
  
      const query = "select checkin_date ,nights, name, postcode" + 
