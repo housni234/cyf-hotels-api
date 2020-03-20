@@ -88,7 +88,7 @@ app.get("/customers", function(req, res) {
           pool
      .query("UPDATE customers SET email=$1, address=$2, city=$3, country=$4, postcode=$5, name=$6 WHERE id=$7", 
      [newEmail, newAddress, newCity, newCountry, newPostcode, newName, customerId])
-     
+
      .then(() => res.send(`customer ${customerId} updated!`))
      .catch(e => console.error(e));
      }
@@ -143,6 +143,29 @@ app.get("/customers", function(req, res) {
     });
 });
 
+app.delete("/customers/:customerId", function(req, res) {
+    const customerId = req.params.customerId;
+
+    pool.query("DELETE FROM bookings WHERE customer_id=$1", [customerId])
+        .then(() => {
+            pool.query("DELETE FROM customers WHERE id=$1", [customerId])
+                .then(() => res.send(`Customer ${customerId} deleted!`))
+                .catch(e => console.error(e));;
+        })
+        .catch(e => console.error(e));
+});
+
+app.delete("/hotels/:hotelId", (req, res) => {
+    const hotelId = req.params.hotelId;
+
+    pool.query("DELETE FROM bookings WHERE hotel_id=$1", [hotelId])
+        .then(() => {
+            pool.query("DELETE FROM hotels WHERE id=$1", [hotelId])
+                .then(() => res.send(`Customer ${hotelId} deleted!`))
+                .catch(e => res.status(500).send(e));;
+        })
+        .catch(e => res.status(500).send(e))
+});
 
 app.listen(3000, function() {
     console.log("Server is listening on port 3000. Ready to accept requests!");
